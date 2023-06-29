@@ -1,5 +1,5 @@
 export const champions = [
-  'Aatrox',
+  // 'Aatrox',
   'Ahri',
   'Akali',
   'Alistar',
