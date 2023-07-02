@@ -12,6 +12,7 @@ const scrapeChampionQuotes = async (champion) => {
           skin: x(['.skin-play-button@data-skin']),
           quote: x('i'),
           url: x(['.audio-button audio@src']),
+          url2: x(['.ext-audiobutton source@src']),
         },
       ]),
     })((err, obj) => {
@@ -21,8 +22,10 @@ const scrapeChampionQuotes = async (champion) => {
         const quotes = [];
         const seen = new Set();
         for (const q of obj.quotes) {
-          if (q.url.length === 0) continue;
+          const url = q.url.length > 0 ? q.url : q.url2;
+          if (url.length === 0) continue;
           const quote = q.quote?.replace(/['"]+/g, '');
+          if (quote === 'Sound Effect') continue;
           const skins = q.skin.length > 0 ? q.skin : ['Original'];
           skins.forEach((skin, index) => {
             const key = `${skin}-${quote}`;
@@ -31,7 +34,7 @@ const scrapeChampionQuotes = async (champion) => {
             quotes.push({
               skin,
               quote,
-              url: q.url[index]?.split('/revision')[0],
+              url: url[index]?.split('/revision')[0],
             });
           });
         }
