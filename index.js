@@ -31,7 +31,7 @@ const scrapeChampionQuotes = async (champion) => {
         for (const q of obj.quotes) {
           const url = q.url || q.url2;
           if (!url || !q.quote) continue;
-          const quote = q.quote.replace(/[^\w\s]/g, '');
+          const quote = q.quote.replace(/"([^"]+)"/g, '$1');
           quotes.push({
             quote,
             url: url.split('/revision')[0],
