@@ -4,6 +4,13 @@ import fs from 'fs';
 
 const x = Xray();
 
+const filterQuotes = (quote) => {
+  if (!quote) return false;
+  if (quote.includes('SFX')) return false;
+  if (quote.length > 3 && quote.slice(-3) === 'ogg') return false;
+  return true;
+};
+
 const scrapeChampionQuotes = async (champion) => {
   return new Promise((resolve, reject) => {
     x(`https://leagueoflegends.fandom.com/wiki/${champion}/LoL/Audio`, {
@@ -29,8 +36,9 @@ const scrapeChampionQuotes = async (champion) => {
             url: url.split('/revision')[0],
           });
         }
+        const filteredQuotes = quotes.filter((q) => filterQuotes(q.quote));
         const uniqueQuotes = [
-          ...new Map(quotes.map((q) => [q.quote, q])).values(),
+          ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
         ];
         resolve({ name: champion, uniqueQuotes });
       }
