@@ -40,7 +40,7 @@ const scrapeChampionQuotes = async (champion) => {
         const uniqueQuotes = [
           ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
         ];
-        resolve({ name: champion, uniqueQuotes });
+        resolve({ name: champion, quotes: uniqueQuotes });
       }
     });
   });
