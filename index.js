@@ -27,8 +27,8 @@ const scrapeChampionQuotes = async (champion) => {
       } else {
         const quotes = [];
         for (const q of obj.quotes) {
-          const url = q.url.length > 0 ? q.url : q.url2;
-          if (url.length === 0) continue;
+          const url = q.url || q.url2;
+          if (!url) continue;
           const quote = q.quote?.replace(/[^\w\s]/g, '');
           if (quote === 'Sound Effect') continue;
           quotes.push({
