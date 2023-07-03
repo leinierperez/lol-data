@@ -4,10 +4,12 @@ import fs from 'fs';
 
 const x = Xray();
 
-const filterQuotes = (quote) => {
-  if (!quote) return false;
-  if (quote.includes('SFX')) return false;
+const filters = ['Effort Sound', 'Sound Effect'];
+
+const filterQuotes = ({ quote, url }) => {
+  if (filters.includes(quote)) return false;
   if (quote.length > 3 && quote.slice(-3) === 'ogg') return false;
+  if (url.includes('SFX')) return false;
   return true;
 };
 
@@ -35,7 +37,7 @@ const scrapeChampionQuotes = async (champion) => {
             url: url.split('/revision')[0],
           });
         }
-        const filteredQuotes = quotes.filter((q) => filterQuotes(q.quote));
+        const filteredQuotes = quotes.filter(filterQuotes);
         const uniqueQuotes = [
           ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
         ];
