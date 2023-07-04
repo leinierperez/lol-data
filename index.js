@@ -57,6 +57,9 @@ const scrapeChampionQuotes = async (champion) => {
               quote = handleXayahRakan(champion, q);
             }
           }
+          if (q.innerQuote && champion === 'Kayn') {
+            extraQuote = q.innerQuote;
+          }
           if (
             dialogueChamps.includes(champion) &&
             q.firstQuoteChamp &&

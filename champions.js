@@ -57,7 +57,7 @@ export const champions = [
   'Kassadin',
   'Katarina',
   // 'Kayle',
-  // 'Kayn',
+  'Kayn',
   'Kennen',
   "Kha'Zix",
   'Kindred',
