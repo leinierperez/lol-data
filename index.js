@@ -14,21 +14,16 @@ const filterQuotes = ({ quote, url }) => {
   return true;
 };
 
-const handleKindred = ({ innerQuoteChamp, innerQuote }) => {
-  if (!innerQuoteChamp && !innerQuote) return false;
-  return innerQuote.replace(/"([^"]+)"/g, '$1');
-};
-
 const handleXayahRakan = (
   champion,
   { quote, innerQuote, innerQuoteChamp, firstQuoteChamp }
 ) => {
-  if (!innerQuoteChamp && !innerQuote) return false;
   if (firstQuoteChamp && firstQuoteChamp.includes(champion)) {
     return quote;
   } else if (innerQuoteChamp.includes(champion)) {
     return innerQuote;
   }
+  return false;
 };
 
 const scrapeChampionQuotes = async (champion) => {
@@ -57,7 +52,7 @@ const scrapeChampionQuotes = async (champion) => {
           let quote = q.quote.replace(/"([^"]+)"/g, '$1');
           if (q.innerQuoteChamp && q.innerQuote) {
             if (champion === 'Kindred') {
-              extraQuote = handleKindred(q);
+              extraQuote = q.innerQuote.replace(/"([^"]+)"/g, '$1');
             } else if (dialogueChamps.includes(champion)) {
               quote = handleXayahRakan(champion, q);
             }
@@ -72,9 +67,7 @@ const scrapeChampionQuotes = async (champion) => {
           if (extraQuote) {
             quote += ' ' + extraQuote;
           }
-          if (quote.includes(`"`)) {
-            quote = quote.replaceAll(`"`, '');
-          }
+          quote = quote.replace(/"/g, '');
           quotes.push({
             quote,
             url: url.split('/revision')[0],
