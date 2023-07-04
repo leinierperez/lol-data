@@ -5,6 +5,7 @@ import fs from 'fs';
 const x = Xray();
 
 const filters = ['Effort Sound', 'Sound Effect'];
+const dialogueChamps = ['Xayah', 'Rakan'];
 
 const filterQuotes = ({ quote, url }) => {
   if (filters.includes(quote)) return false;
@@ -13,14 +14,35 @@ const filterQuotes = ({ quote, url }) => {
   return true;
 };
 
+const handleKindred = ({ innerQuoteChamp, innerQuote }) => {
+  if (!innerQuoteChamp && !innerQuote) return false;
+  return innerQuote.replace(/"([^"]+)"/g, '$1');
+};
+
+const handleXayahRakan = (
+  champion,
+  { quote, innerQuote, innerQuoteChamp, firstQuoteChamp }
+) => {
+  if (!innerQuoteChamp && !innerQuote) return false;
+  if (firstQuoteChamp && firstQuoteChamp.includes(champion)) {
+    return quote;
+  } else if (innerQuoteChamp.includes(champion)) {
+    return innerQuote;
+  }
+};
+
 const scrapeChampionQuotes = async (champion) => {
   return new Promise((resolve, reject) => {
     x(`https://leagueoflegends.fandom.com/wiki/${champion}/LoL/Audio`, {
       quotes: x('.mw-parser-output ul li', [
         {
           quote: x('i'),
+          firstQuoteChamp: x('b'),
+          innerQuoteChamp: x('ul li b'),
+          innerQuote: x('ul li i'),
           url: x('.audio-button audio@src'),
           url2: x('.ext-audiobutton source@src'),
+          aatroxUrl: x('span .ext-audiobutton source@src'),
         },
       ]),
     })((err, obj) => {
@@ -29,9 +51,30 @@ const scrapeChampionQuotes = async (champion) => {
       } else {
         const quotes = [];
         for (const q of obj.quotes) {
-          const url = q.url || q.url2;
+          let extraQuote = '';
+          const url = q.url || q.url2 || q.aatroxUrl;
           if (!url || !q.quote) continue;
-          const quote = q.quote.replace(/"([^"]+)"/g, '$1');
+          let quote = q.quote.replace(/"([^"]+)"/g, '$1');
+          if (q.innerQuoteChamp && q.innerQuote) {
+            if (champion === 'Kindred') {
+              extraQuote = handleKindred(q);
+            } else if (dialogueChamps.includes(champion)) {
+              quote = handleXayahRakan(champion, q);
+            }
+          }
+          if (
+            dialogueChamps.includes(champion) &&
+            q.firstQuoteChamp &&
+            !q.firstQuoteChamp.includes(champion)
+          ) {
+            continue;
+          }
+          if (extraQuote) {
+            quote += ' ' + extraQuote;
+          }
+          if (quote.includes(`"`)) {
+            quote = quote.replaceAll(`"`, '');
+          }
           quotes.push({
             quote,
             url: url.split('/revision')[0],
