@@ -5,7 +5,7 @@ import fs from 'fs';
 const x = Xray();
 
 const filters = ['Effort Sound', 'Sound Effect'];
-const dialogueChamps = ['Xayah', 'Rakan'];
+const dialogueChamps = ['Xayah', 'Rakan', 'Kayle', 'Morgana'];
 
 const filterQuotes = ({ quote, url }) => {
   if (filters.includes(quote)) return false;
@@ -14,7 +14,7 @@ const filterQuotes = ({ quote, url }) => {
   return true;
 };
 
-const handleXayahRakan = (
+const handleDialogueChamps = (
   champion,
   { quote, innerQuote, innerQuoteChamp, firstQuoteChamp }
 ) => {
@@ -54,7 +54,7 @@ const scrapeChampionQuotes = async (champion) => {
             if (champion === 'Kindred') {
               extraQuote = q.innerQuote.replace(/"([^"]+)"/g, '$1');
             } else if (dialogueChamps.includes(champion)) {
-              quote = handleXayahRakan(champion, q);
+              quote = handleDialogueChamps(champion, q);
             }
           }
           if (q.innerQuote && champion === 'Kayn') {
