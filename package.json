@@ -12,6 +12,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.363.0",
+    "dotenv": "^16.3.1",
     "x-ray": "^2.3.4"
   },
   "devDependencies": {
