@@ -47,8 +47,7 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
         reject(err);
       } else {
         const quotes = [];
-        const files = [];
-        let s3URL, key;
+        let files, s3URL, key;
         for (const q of obj.quotes) {
           let extraQuote = '';
           let url = q.url || q.url2 || q.aatroxUrl;
@@ -84,17 +83,18 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
             quote,
             url: useWikiUrl ? url : s3URL,
           });
-          if (uploadToS3) {
-            files.push({
-              key,
-              url,
-            });
-          }
         }
         const filteredQuotes = quotes.filter(filterQuotes);
         const uniqueQuotes = [
           ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
         ];
+        if (uploadToS3) {
+          files = uniqueQuotes.map(({ url }) => {
+            const fileName = url.substring(url.lastIndexOf('/') + 1);
+            const S3URL = `https://r2.leaguesounds.com/${key}`;
+            return { key: fileName, url: S3URL };
+          });
+        }
         resolve({ name: champion, quotes: uniqueQuotes, files });
       }
     });
