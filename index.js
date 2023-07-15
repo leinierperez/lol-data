@@ -5,13 +5,14 @@ import uploadBatch from './s3Upload.js';
 
 const x = Xray();
 
-const filters = ['Effort Sound', 'Sound Effect'];
+const quoteFilters = ['Effort Sound', 'Sound Effect'];
+const urlFilters = ['SFX', 'FX', 'Music'];
 const dialogueChamps = ['Xayah', 'Rakan', 'Kayle', 'Morgana'];
 
 const filterQuotes = ({ quote, url }) => {
-  if (filters.includes(quote)) return false;
+  if (quoteFilters.includes(quote)) return false;
   if (quote.length > 3 && quote.slice(-3) === 'ogg') return false;
-  if (url.includes('SFX')) return false;
+  if (urlFilters.some((filter) => url.includes(filter))) return false;
   return true;
 };
 
