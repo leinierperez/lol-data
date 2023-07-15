@@ -5,16 +5,22 @@ import uploadBatch from './s3Upload.js';
 
 const x = Xray();
 
-const quoteFilters = ['effort sound', 'sound Effect', 'sfx', 'music plays'];
+const quoteFilters = ['effort sound', 'sound effect', 'sfx', 'music plays'];
 const urlFilters = ['sfx', 'fx', 'music'];
 const dialogueChamps = ['Xayah', 'Rakan', 'Kayle', 'Morgana'];
 
-const filterQuotes = ({ quote, url }) => {
+const filterQuotes = ({ quote, wikiURL, s3URL }) => {
   quote = quote.toLowerCase();
-  url = url.toLowerCase();
+  wikiURL = wikiURL.toLowerCase();
+  s3URL = s3URL.toLowerCase();
   if (quoteFilters.some((filter) => quote.includes(filter))) return false;
   if (quote.length > 3 && quote.slice(-3) === 'ogg') return false;
-  if (urlFilters.some((filter) => url.includes(filter))) return false;
+  if (
+    urlFilters.some(
+      (filter) => wikiURL.includes(filter) && s3URL.includes(filter)
+    )
+  )
+    return false;
   return true;
 };
 
@@ -30,7 +36,7 @@ const handleDialogueChamps = (
   return false;
 };
 
-const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
+const scrapeChampionQuotes = async (champion, { uploadToS3 }) => {
   return new Promise((resolve, reject) => {
     x(`https://leagueoflegends.fandom.com/wiki/${champion}/LoL/Audio`, {
       quotes: x('.mw-parser-output ul li', [
@@ -56,10 +62,8 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
           if (!url || !q.quote) continue;
           let quote = q.quote.replace(/"([^"]+)"/g, '$1');
           url = url.split('/revision')[0];
-          if (!useWikiUrl) {
-            key = url.substring(url.lastIndexOf('/') + 1);
-            s3URL = `https://r2.leaguesounds.com/${key}`;
-          }
+          key = url.substring(url.lastIndexOf('/') + 1);
+          s3URL = `https://r2.leaguesounds.com/${key}`;
           if (q.innerQuoteChamp && q.innerQuote) {
             if (champion === 'Kindred') {
               extraQuote = q.innerQuote.replace(/"([^"]+)"/g, '$1');
@@ -83,7 +87,8 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
           quote = quote.replace(/"/g, '');
           quotes.push({
             quote,
-            url: useWikiUrl ? url : s3URL,
+            wikiURL: url,
+            s3URL,
           });
         }
         const filteredQuotes = quotes.filter(filterQuotes);
@@ -91,10 +96,9 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
           ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
         ];
         if (uploadToS3) {
-          files = uniqueQuotes.map(({ url }) => {
-            const fileName = url.substring(url.lastIndexOf('/') + 1);
-            const S3URL = `https://r2.leaguesounds.com/${key}`;
-            return { key: fileName, url: S3URL };
+          files = uniqueQuotes.map(({ wikiURL }) => {
+            const key = wikiURL.substring(wikiURL.lastIndexOf('/') + 1);
+            return { key, url: wikiURL };
           });
         }
         resolve({ name: champion, quotes: uniqueQuotes, files });
@@ -103,9 +107,9 @@ const scrapeChampionQuotes = async (champion, { useWikiUrl, uploadToS3 }) => {
   });
 };
 
-const getQuotes = async ({ useWikiUrl, uploadToS3 }) => {
+const getQuotes = async ({ uploadToS3 }) => {
   const quotePromises = champions.map((champion) =>
-    scrapeChampionQuotes(champion, { useWikiUrl, uploadToS3 })
+    scrapeChampionQuotes(champion, { uploadToS3 })
   );
   return Promise.all(quotePromises);
 };
@@ -115,27 +119,19 @@ const handleS3Upload = async (data) => {
   await uploadBatch(files);
 };
 
-const saveData = async ({ useWikiUrl, uploadToS3 }) => {
-  const data = await getQuotes({ useWikiUrl, uploadToS3 });
-  const dataWithoutFiles = data.map(({ name, quotes }) => ({
-    name,
-    quotes,
-  }));
+const saveData = async ({ uploadToS3 }) => {
+  const data = await getQuotes({ uploadToS3 });
+  const finalData = data.map(({ name, quotes }) => {
+    const newQuotes = quotes.map(({ quote, s3URL }) => {
+      return { quote, url: s3URL };
+    });
+    return { name, quotes: newQuotes };
+  });
   if (uploadToS3) {
     await handleS3Upload(data, uploadToS3);
   }
-  if (useWikiUrl) {
-    await fs.promises.writeFile(
-      'data_wiki_links.json',
-      JSON.stringify(dataWithoutFiles)
-    );
-  } else {
-    await fs.promises.writeFile(
-      'data_s3_links.json',
-      JSON.stringify(dataWithoutFiles)
-    );
-  }
+  await fs.promises.writeFile('data.json', JSON.stringify(finalData));
   console.log('Data Saved!');
 };
 
-saveData({ useWikiUrl: false, uploadToS3: false });
+saveData({ uploadToS3: true });
