@@ -62,7 +62,7 @@ const scrapeChampionQuotes = async (champion, { uploadToS3 }) => {
           if (!url || !q.quote) continue;
           let quote = q.quote.replace(/"([^"]+)"/g, '$1');
           url = url.split('/revision')[0];
-          key = url.substring(url.lastIndexOf('/') + 1);
+          key = decodeURIComponent(url.substring(url.lastIndexOf('/') + 1));
           s3URL = `https://r2.leaguesounds.com/${key}`;
           if (q.innerQuoteChamp && q.innerQuote) {
             if (champion === 'Kindred') {
@@ -98,7 +98,8 @@ const scrapeChampionQuotes = async (champion, { uploadToS3 }) => {
         if (uploadToS3) {
           files = uniqueQuotes.map(({ wikiURL }) => {
             const key = wikiURL.substring(wikiURL.lastIndexOf('/') + 1);
-            return { key, url: wikiURL };
+            const decodedKey = decodeURIComponent(key);
+            return { key: decodedKey, url: wikiURL };
           });
         }
         resolve({ name: champion, quotes: uniqueQuotes, files });
