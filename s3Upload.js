@@ -1,5 +1,9 @@
+import {
+  HeadObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import 'dotenv/config';
-import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 
 const client = new S3Client({
   region: 'auto',
@@ -34,27 +38,65 @@ const uploadFileFromURL = async (key, url) => {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+const checkExistingObjectsInBatch = async (keys) => {
+  const existingKeys = [];
+  const headCommands = keys.map(
+    (key) =>
+      new HeadObjectCommand({
+        Bucket: 'lol-quotes-audio',
+        Key: key,
+      })
+  );
+
+  const responses = await Promise.allSettled(
+    headCommands.map((command) => client.send(command))
+  );
+
+  responses.forEach((response, index) => {
+    if (response.status === 'fulfilled') {
+      existingKeys.push(keys[index]);
+    }
+  });
+
+  return existingKeys;
+};
+
 const uploadBatch = async (files) => {
   const batchSize = 200;
   const delayMs = 2000;
   const failedUploads = [];
+  const skippedUploads = [];
   for (let i = 0; i < files.length; i += batchSize) {
     const batch = files.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map(async (file) => {
-        const { key, url } = file;
-        try {
-          await uploadFileFromURL(key, url);
-          await delay(delayMs);
-        } catch (err) {
-          console.error(`Error uploading file with key ${key}: ${err}`);
-          failedUploads.push({ key, url });
-        }
-      })
-    );
+    const keys = batch.map((file) => file.key);
+    try {
+      const existingKeys = await checkExistingObjectsInBatch(keys);
+      await Promise.all(
+        batch.map(async (file) => {
+          const { key, url } = file;
+          if (existingKeys.includes(key)) {
+            console.log(`File ${key} already exists. Skipping upload.`);
+            skippedUploads.push({ key, url });
+            return;
+          }
+          try {
+            await uploadFileFromURL(key, url);
+            await delay(delayMs);
+          } catch (err) {
+            console.error(`Error uploading file with key ${key}: ${err}`);
+            failedUploads.push({ key, url });
+          }
+        })
+      );
+    } catch (err) {
+      console.error('Error checking object existence:', err);
+      failedUploads.push(...batch);
+      continue;
+    }
   }
   console.log('File Uploading Finished!');
   console.log('Failed uploads:', failedUploads);
+  console.log('Skipped uploads(already exits in bucket):', skippedUploads);
 };
 
 export default uploadBatch;
