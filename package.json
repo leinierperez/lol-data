@@ -1,12 +1,11 @@
 {
-  "name": "lolwiki-scraper",
+  "name": "lol-data",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
-  "type": "module",
+  "main": "index.ts",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon index.js"
+    "start": "ts-node src/index.ts"
   },
   "keywords": [],
   "author": "",
@@ -17,6 +16,8 @@
     "x-ray": "^2.3.4"
   },
   "devDependencies": {
-    "nodemon": "^2.0.22"
+    "@types/node": "^20.4.2",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.1.6"
   }
 }
