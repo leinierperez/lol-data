@@ -1,6 +1,6 @@
+import fs from 'fs';
 import Xray from 'x-ray';
 import { champions } from './champions.js';
-import fs from 'fs';
 import uploadBatch from './s3Upload.js';
 
 const x = Xray();
