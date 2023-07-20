@@ -80,6 +80,7 @@ export const champions = [
   'Miss_Fortune',
   'Mordekaiser',
   'Morgana',
+  'Naafiri',
   'Nami',
   'Nasus',
   'Nautilus',
