@@ -150,7 +150,7 @@ const saveData = async ({ uploadToS3 }: { uploadToS3: boolean }) => {
   if (uploadToS3) {
     await handleS3Upload(data);
   }
-  await fs.promises.writeFile('data.json', JSON.stringify(finalData));
+  await fs.promises.writeFile('./data/quotes.json', JSON.stringify(finalData));
   console.log('Data Saved!');
 };
 
