@@ -1,9 +1,13 @@
-export interface Quote {
+export interface ChampionQuote {
   name: string;
-  quotes: UnfilteredQuote[];
+  quotes: Quote[];
 }
 
-export interface RawQuote {
+export interface Quote {
+  quote: string;
+  url: string;
+}
+export interface ChampionRawQuote {
   name: string;
   quotes: UnfilteredQuote[];
   files: QuoteFile[];

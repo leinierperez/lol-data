@@ -3,8 +3,10 @@ import Xray from 'x-ray';
 import { champions } from '../utils/champions.js';
 import uploadBatch from '../utils/cloudflare.js';
 import {
+  ChampionQuote,
+  ChampionRawQuote,
+  Quote,
   QuoteFile,
-  RawQuote,
   UnfilteredQuote,
   XRayObject,
   XRayQuote,
@@ -46,7 +48,7 @@ const handleDialogueChamps = (
 const scrapeChampionQuotes = async (
   champion: string,
   { uploadToS3 }: { uploadToS3: boolean }
-): Promise<RawQuote> => {
+): Promise<ChampionRawQuote> => {
   return new Promise((resolve, reject) => {
     x(`https://leagueoflegends.fandom.com/wiki/${champion}/LoL/Audio`, {
       quotes: x('.mw-parser-output ul li', [
@@ -127,22 +129,22 @@ const getQuotes = async ({
   uploadToS3,
 }: {
   uploadToS3: boolean;
-}): Promise<RawQuote[]> => {
+}): Promise<ChampionRawQuote[]> => {
   const quotePromises = champions.map((champion: string) =>
     scrapeChampionQuotes(champion, { uploadToS3 })
   );
   return Promise.all(quotePromises);
 };
 
-const handleS3Upload = async (data: RawQuote[]) => {
+const handleS3Upload = async (data: ChampionRawQuote[]) => {
   const files = data.flatMap(({ files }) => files);
   await uploadBatch(files);
 };
 
 const saveData = async ({ uploadToS3 }: { uploadToS3: boolean }) => {
   const data = await getQuotes({ uploadToS3 });
-  const finalData = data.map(({ name, quotes }) => {
-    const newQuotes = quotes.map(({ quote, s3URL }) => {
+  const finalData: ChampionQuote[] = data.map(({ name, quotes }) => {
+    const newQuotes: Quote[] = quotes.map(({ quote, s3URL }) => {
       return { quote, url: s3URL };
     });
     return { name, quotes: newQuotes };
