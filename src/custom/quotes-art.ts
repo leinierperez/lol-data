@@ -28,11 +28,17 @@ export async function generateQuotesArtDataToFile(): Promise<QuotesArtData[]> {
         return {
           name: skin.name,
           id: skin.id,
-          splashPath: skin.splashPath,
-          uncenteredSplashPath: skin.uncenteredSplashPath,
-          tilePath: skin.tilePath,
-          loadScreenPath: skin.loadScreenPath,
-          loadScreenVintagePath: skin.loadScreenVintagePath,
+          splashPath: skin.splashPath.replace('http', 'https'),
+          uncenteredSplashPath: skin.uncenteredSplashPath.replace(
+            'http',
+            'https'
+          ),
+          tilePath: skin.tilePath.replace('http', 'https'),
+          loadScreenPath: skin.loadScreenPath.replace('http', 'https'),
+          loadScreenVintagePath: skin.loadScreenVintagePath?.replace(
+            'http',
+            'https'
+          ),
         };
       });
 
@@ -41,7 +47,7 @@ export async function generateQuotesArtDataToFile(): Promise<QuotesArtData[]> {
         key,
         name,
         title,
-        icon,
+        icon: icon.replace('http', 'https'),
         quotes: quotes || [],
         skins: newSkins || [],
       });
