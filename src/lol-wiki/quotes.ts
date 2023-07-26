@@ -152,7 +152,7 @@ const handleS3Upload = async (data: ChampionRawQuote[]) => {
   await uploadBatch(files);
 };
 
-const saveData = async ({ uploadToS3 }: { uploadToS3: boolean }) => {
+export async function saveData({ uploadToS3 }: { uploadToS3: boolean }) {
   const data = await getQuotes({ uploadToS3 });
   const finalData: ChampionQuote[] = data.map(({ name, quotes }) => {
     const newQuotes: Quote[] = quotes.map(({ quote, s3URL }) => {
@@ -165,6 +165,4 @@ const saveData = async ({ uploadToS3 }: { uploadToS3: boolean }) => {
   }
   await fs.promises.writeFile('./data/quotes.json', JSON.stringify(finalData));
   console.log('Data Saved!');
-};
-
-saveData({ uploadToS3: true });
+}
