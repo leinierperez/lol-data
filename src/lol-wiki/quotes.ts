@@ -44,6 +44,19 @@ const handleDialogueChamps = (
   }
 };
 
+const getUniqueQuotes = (quotes: UnfilteredQuote[]) => {
+  const seenQuotes = new Set<string>();
+  const seenURLs = new Set<string>();
+  return quotes.filter((q) => {
+    if (!seenQuotes.has(q.quote) && !seenURLs.has(q.s3URL)) {
+      seenQuotes.add(q.quote);
+      seenURLs.add(q.s3URL);
+      return true;
+    }
+    return false;
+  });
+};
+
 // TODO: Refactor
 const scrapeChampionQuotes = async (
   champion: string,
@@ -105,9 +118,7 @@ const scrapeChampionQuotes = async (
           });
         }
         const filteredQuotes = quotes.filter(filterQuotes);
-        const uniqueQuotes = [
-          ...new Map(filteredQuotes.map((q) => [q.quote, q])).values(),
-        ];
+        const uniqueQuotes = getUniqueQuotes(filteredQuotes);
         if (uploadToS3) {
           files = uniqueQuotes.map(({ wikiURL }) => {
             const key = wikiURL.substring(wikiURL.lastIndexOf('/') + 1);
