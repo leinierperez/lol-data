@@ -28,17 +28,13 @@ export async function generateQuotesArtDataToFile(): Promise<QuotesArtData[]> {
         return {
           name: skin.name,
           id: skin.id,
-          splashPath: skin.splashPath.replace('http', 'https'),
-          uncenteredSplashPath: skin.uncenteredSplashPath.replace(
-            'http',
-            'https'
-          ),
-          tilePath: skin.tilePath.replace('http', 'https'),
-          loadScreenPath: skin.loadScreenPath.replace('http', 'https'),
-          loadScreenVintagePath: skin.loadScreenVintagePath?.replace(
-            'http',
-            'https'
-          ),
+          splashPath: ensureHttpsURL(skin.splashPath),
+          uncenteredSplashPath: ensureHttpsURL(skin.uncenteredSplashPath),
+          tilePath: ensureHttpsURL(skin.tilePath),
+          loadScreenPath: ensureHttpsURL(skin.loadScreenPath),
+          loadScreenVintagePath: skin.loadScreenVintagePath
+            ? ensureHttpsURL(skin.loadScreenVintagePath)
+            : null,
         };
       });
 
@@ -47,7 +43,7 @@ export async function generateQuotesArtDataToFile(): Promise<QuotesArtData[]> {
         key,
         name,
         title,
-        icon: icon.replace('http', 'https'),
+        icon: ensureHttpsURL(icon),
         quotes: quotes || [],
         skins: newSkins || [],
       });
@@ -63,6 +59,13 @@ export async function generateQuotesArtDataToFile(): Promise<QuotesArtData[]> {
   } catch (err) {
     throw err;
   }
+}
+
+function ensureHttpsURL(url: string) {
+  if (url.startsWith('http:')) {
+    return url.replace('http', 'https');
+  }
+  return url;
 }
 
 interface QuotesArtData {
