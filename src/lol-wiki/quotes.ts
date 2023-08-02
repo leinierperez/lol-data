@@ -44,17 +44,24 @@ const handleDialogueChamps = (
   }
 };
 
-const getUniqueQuotes = (quotes: UnfilteredQuote[]) => {
+const getUniqueAndProcessedData = (quotes: ChampionRawQuote[]) => {
   const seenQuotes = new Set<string>();
   const seenURLs = new Set<string>();
-  return quotes.filter((q) => {
-    if (!seenQuotes.has(q.quote) && !seenURLs.has(q.s3URL)) {
-      seenQuotes.add(q.quote);
-      seenURLs.add(q.s3URL);
-      return true;
+  const uniqueAndProcessedData: ChampionQuote[] = [];
+
+  for (const champ of quotes) {
+    const uniqueQuotes: Quote[] = [];
+    for (const quote of champ.quotes) {
+      if (!seenQuotes.has(quote.quote) && !seenURLs.has(quote.s3URL)) {
+        seenQuotes.add(quote.quote);
+        seenURLs.add(quote.s3URL);
+        uniqueQuotes.push({ quote: quote.quote, url: quote.s3URL });
+      }
     }
-    return false;
-  });
+    uniqueAndProcessedData.push({ name: champ.name, quotes: uniqueQuotes });
+  }
+
+  return uniqueAndProcessedData;
 };
 
 // TODO: Refactor
@@ -118,9 +125,8 @@ const scrapeChampionQuotes = async (
           });
         }
         const filteredQuotes = quotes.filter(filterQuotes);
-        const uniqueQuotes = getUniqueQuotes(filteredQuotes);
         if (uploadToS3) {
-          files = uniqueQuotes.map(({ wikiURL }) => {
+          files = filteredQuotes.map(({ wikiURL }) => {
             const key = wikiURL.substring(wikiURL.lastIndexOf('/') + 1);
             const decodedKey = decodeURIComponent(key);
             return { key: decodedKey, url: wikiURL };
@@ -128,7 +134,7 @@ const scrapeChampionQuotes = async (
         }
         resolve({
           name: champion,
-          quotes: uniqueQuotes,
+          quotes: filteredQuotes,
           files,
         });
       }
@@ -154,12 +160,7 @@ const handleS3Upload = async (data: ChampionRawQuote[]) => {
 
 export async function saveData({ uploadToS3 }: { uploadToS3: boolean }) {
   const data = await getQuotes({ uploadToS3 });
-  const finalData: ChampionQuote[] = data.map(({ name, quotes }) => {
-    const newQuotes: Quote[] = quotes.map(({ quote, s3URL }) => {
-      return { quote, url: s3URL };
-    });
-    return { name, quotes: newQuotes };
-  });
+  const finalData = getUniqueAndProcessedData(data);
   if (uploadToS3) {
     await handleS3Upload(data);
   }
