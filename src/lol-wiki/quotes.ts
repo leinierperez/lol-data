@@ -1,6 +1,6 @@
 import fs from 'fs';
 import Xray from 'x-ray';
-import { champions } from '../utils/champions.js';
+import champions from '../utils/champions.json' assert { type: 'json' };
 import uploadBatch from '../utils/cloudflare.js';
 import {
   ChampionQuote,
